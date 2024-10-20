@@ -24,8 +24,23 @@ exports.combineRules = async (req, res) => {
         // Combine the rule strings into a single AST
         const combinedAST = ruleEngine.combineRules(ruleStrings);
 
-        // Convert the array of rule strings into a single combined rule string for storage
-        const combinedRuleString = ruleStrings.join(" AND "); // This is an assumption, can be OR or customized
+        // Analyze operator frequency to dynamically build the combined rule string
+        let andCount = 0;
+        let orCount = 0;
+
+        ruleStrings.forEach((rule) => {
+            const tokens = rule.split(" ");
+            tokens.forEach((token) => {
+                if (token === "AND") andCount++;
+                if (token === "OR") orCount++;
+            });
+        });
+
+        // Choose the most frequent operator for combining the rules
+        const mostFrequentOperator = andCount > orCount ? "AND" : "OR";
+
+        // Convert the array of rule strings into a single combined rule string using the most frequent operator
+        const combinedRuleString = ruleStrings.join(` ${mostFrequentOperator} `);
 
         // Store the combined rule in the database
         const combinedRule = new Rule({

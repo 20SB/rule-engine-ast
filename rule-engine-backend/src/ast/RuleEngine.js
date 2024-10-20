@@ -35,17 +35,37 @@ class RuleEngine {
     }
 
     combineRules(rules) {
-        let combinedAST = this.createRule(rules[0]);
+        const asts = rules.map((rule) => this.createRule(rule)); // Parse each rule string to AST
 
-        for (let i = 1; i < rules.length; i++) {
-            const nextRuleAST = this.createRule(rules[i]);
-            const orNode = new Node("operator", "AND");
-            orNode.left = combinedAST;
-            orNode.right = nextRuleAST;
-            combinedAST = orNode;
+        // Track frequency of AND/OR operators
+        let andCount = 0;
+        let orCount = 0;
+
+        rules.forEach((rule) => {
+            const tokens = rule.split(" ");
+            tokens.forEach((token) => {
+                if (token === "AND") andCount++;
+                if (token === "OR") orCount++;
+            });
+        });
+
+        // Determine the most frequent operator for combining
+        const rootOperator = andCount > orCount ? "AND" : "OR";
+
+        // Start combining ASTs
+        let combinedAST = asts[0]; // Initialize with the first AST
+
+        for (let i = 1; i < asts.length; i++) {
+            const nextAST = asts[i];
+
+            // Create an operator node using the most frequent operator
+            const operatorNode = new Node("operator", rootOperator);
+            operatorNode.left = combinedAST;
+            operatorNode.right = nextAST;
+            combinedAST = operatorNode;
         }
 
-        return combinedAST;
+        return combinedAST; // Return the combined root node of the AST
     }
 
     evaluateRule(ast, data) {
