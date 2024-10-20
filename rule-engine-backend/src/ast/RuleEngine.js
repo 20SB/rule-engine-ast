@@ -39,7 +39,7 @@ class RuleEngine {
 
         for (let i = 1; i < rules.length; i++) {
             const nextRuleAST = this.createRule(rules[i]);
-            const orNode = new Node("operator", "OR");
+            const orNode = new Node("operator", "AND");
             orNode.left = combinedAST;
             orNode.right = nextRuleAST;
             combinedAST = orNode;

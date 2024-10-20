@@ -16,12 +16,26 @@ exports.createRule = async (req, res) => {
     }
 };
 
-// Combine Rules API
-exports.combineRules = (req, res) => {
+// Combine Rules API (Modified to store combined rule)
+exports.combineRules = async (req, res) => {
     try {
         const { ruleStrings } = req.body;
+
+        // Combine the rule strings into a single AST
         const combinedAST = ruleEngine.combineRules(ruleStrings);
-        res.status(200).json({ combinedAST });
+
+        // Convert the array of rule strings into a single combined rule string for storage
+        const combinedRuleString = ruleStrings.join(" AND "); // This is an assumption, can be OR or customized
+
+        // Store the combined rule in the database
+        const combinedRule = new Rule({
+            ruleString: combinedRuleString,
+            ast: combinedAST,
+        });
+        await combinedRule.save();
+
+        // Return the saved combined rule and AST
+        res.status(201).json(combinedRule);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -35,5 +49,15 @@ exports.evaluateRule = (req, res) => {
         res.status(200).json({ result });
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+};
+
+// Get All Rules API (New)
+exports.getAllRules = async (req, res) => {
+    try {
+        const rules = await Rule.find(); // Fetch all rules from the database
+        res.status(200).json(rules); // Return the list of rules
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
